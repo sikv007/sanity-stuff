@@ -1,18 +1,20 @@
 import {defineField, defineType} from 'sanity'
-import {defaultSlugField} from './shared/slug'
+import {slugify} from '../helpers/slugify'
 
 export const chapter = defineType({
   type: 'document',
   name: 'chapter',
+  title: 'Kapittel',
   fields: [
-    defaultSlugField,
     defineField({type: 'string', name: 'title'}),
     defineField({
-      type: 'image',
-      name: 'image',
+      type: 'slug',
+      name: 'slug',
       options: {
-        hotspot: true,
+        source: 'title',
+        slugify: (input) => slugify(input),
       },
+      validation: (rule) => rule.required(),
     }),
   ],
 })

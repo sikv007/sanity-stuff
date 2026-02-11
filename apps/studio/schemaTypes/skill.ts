@@ -1,14 +1,16 @@
 import {defineField, defineType} from 'sanity'
 import {slugify} from '../helpers/slugify'
 
-export const courseModule = defineType({
+export const skill = defineType({
   type: 'document',
-  name: 'module',
-  title: 'Modul',
+  name: 'skill',
+  title: 'Ferdighet',
   fields: [
     defineField({
       type: 'string',
       name: 'title',
+      title: 'Title',
+      description: 'The title of the skill',
       validation: (rule) => rule.required(),
     }),
     defineField({
