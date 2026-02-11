@@ -52,6 +52,24 @@ export const course = defineType({
       title: 'Tilbakemeldinger',
       description: 'Tilbakemeldinger fra deltakere på kurset',
       of: [defineArrayMember({type: 'reference', to: {type: 'feedback'}})],
+      validation: (rule) =>
+        rule.unique().error('En tilbakemelding kan ikke legges til flere ganger'),
+    }),
+    defineField({
+      type: 'array',
+      name: 'learningTracks',
+      title: 'Læringsstier',
+      description: 'Læringsstier som inkluderer dette kurset',
+      of: [defineArrayMember({type: 'reference', to: {type: 'learningTrack'}})],
+      validation: (rule) => rule.unique().error('En læringssti kan ikke legges til flere ganger'),
+    }),
+    defineField({
+      type: 'array',
+      name: 'skills',
+      title: 'Ferdigheter',
+      description: 'Ferdigheter som dekkes i kurset',
+      of: [defineArrayMember({type: 'reference', to: {type: 'skill'}})],
+      validation: (rule) => rule.unique().error('En ferdighet kan ikke legges til flere ganger'),
     }),
   ],
 })

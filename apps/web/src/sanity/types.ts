@@ -13,6 +13,34 @@
  */
 
 // Source: schema.json
+export type Feedback = {
+  _id: string;
+  _type: "feedback";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: string;
+  score?: number;
+  content?: string;
+  approved?: boolean;
+};
+
+export type Skill = {
+  _id: string;
+  _type: "skill";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title?: string;
+  slug?: Slug;
+};
+
+export type Slug = {
+  _type: "slug";
+  current?: string;
+  source?: string;
+};
+
 export type SanityImageAssetReference = {
   _ref: string;
   _type: "reference";
@@ -20,14 +48,23 @@ export type SanityImageAssetReference = {
   [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
 };
 
-export type Chapter = {
+export type SkillReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "skill";
+};
+
+export type Instructor = {
   _id: string;
-  _type: "chapter";
+  _type: "instructor";
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
+  firstName?: string;
+  lastName?: string;
   slug?: Slug;
-  title?: string;
+  email?: string;
   image?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -35,6 +72,29 @@ export type Chapter = {
     crop?: SanityImageCrop;
     _type: "image";
   };
+  biography?: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote";
+    listItem?: "bullet" | "number";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+  skills?: Array<
+    {
+      _key: string;
+    } & SkillReference
+  >;
 };
 
 export type SanityImageCrop = {
@@ -51,6 +111,16 @@ export type SanityImageHotspot = {
   y?: number;
   height?: number;
   width?: number;
+};
+
+export type Chapter = {
+  _id: string;
+  _type: "chapter";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title?: string;
+  slug?: Slug;
 };
 
 export type Module = {
@@ -70,6 +140,20 @@ export type ModuleReference = {
   [internalGroqTypeReferenceTo]?: "module";
 };
 
+export type InstructorReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "instructor";
+};
+
+export type FeedbackReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "feedback";
+};
+
 export type Course = {
   _id: string;
   _type: "course";
@@ -78,12 +162,7 @@ export type Course = {
   _rev: string;
   title?: string;
   slug?: Slug;
-  modules?: Array<
-    {
-      _key: string;
-    } & ModuleReference
-  >;
-  content?: Array<{
+  introduction?: Array<{
     children?: Array<{
       marks?: Array<string>;
       text?: string;
@@ -101,12 +180,30 @@ export type Course = {
     _type: "block";
     _key: string;
   }>;
+  modules?: Array<
+    {
+      _key: string;
+    } & ModuleReference
+  >;
+  instructors?: Array<
+    {
+      _key: string;
+    } & InstructorReference
+  >;
+  feedback?: Array<
+    {
+      _key: string;
+    } & FeedbackReference
+  >;
 };
 
-export type Slug = {
-  _type: "slug";
-  current?: string;
-  source?: string;
+export type MediaTag = {
+  _id: string;
+  _type: "media.tag";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: Slug;
 };
 
 export type SanityImagePaletteSwatch = {
@@ -207,14 +304,21 @@ export type Geopoint = {
 };
 
 export type AllSanitySchemaTypes =
+  | Feedback
+  | Skill
+  | Slug
   | SanityImageAssetReference
-  | Chapter
+  | SkillReference
+  | Instructor
   | SanityImageCrop
   | SanityImageHotspot
+  | Chapter
   | Module
   | ModuleReference
+  | InstructorReference
+  | FeedbackReference
   | Course
-  | Slug
+  | MediaTag
   | SanityImagePaletteSwatch
   | SanityImagePalette
   | SanityImageDimensions
@@ -226,15 +330,31 @@ export type AllSanitySchemaTypes =
 
 export declare const internalGroqTypeReferenceTo: unique symbol;
 
-// Source: ../web/src/app/courses/page.tsx
-// Variable: COURSES_QUERY
-// Query: *[_type == "course" && date > now]{name}
-export type COURSES_QUERY_RESULT = Array<never>;
+// Source: ../web/src/api/courses.ts
+// Variable: courses
+// Query: *[_type == "course"]    {      _id,      title,      instructors[]->{        _id,        firstName,        lastName,        slug,        image,      },  }
+export type CoursesResult = Array<{
+  _id: string;
+  title: string | null;
+  instructors: Array<{
+    _id: string;
+    firstName: string | null;
+    lastName: string | null;
+    slug: Slug | null;
+    image: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    } | null;
+  }> | null;
+}>;
 
 // Query TypeMap
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
-    '*[_type == "course" && date > now]{name}': COURSES_QUERY_RESULT;
+    '\n    *[_type == "course"]\n    {\n      _id,\n      title,\n      instructors[]->{\n        _id,\n        firstName,\n        lastName,\n        slug,\n        image,\n      },\n  }': CoursesResult;
   }
 }
